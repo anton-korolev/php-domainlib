@@ -6,7 +6,7 @@ namespace DomainLib\Examples;
 
 use DomainLib\Results\OperationResult;
 
-/* delete or append the second-to-last space * /
+/* delete or append the second-to-last space */
 
 // Without Composer autoloader.
 require __DIR__ . '/../src/Results/OperationResult.php';
@@ -18,9 +18,9 @@ require __DIR__ . '/../src/DataUnits/ValidRecord.php';
 require __DIR__ . '/../src/DataUnits/ValueObject.php';
 require __DIR__ . '/../src/DataUnits/EntityState.php';
 
-require __DIR__ . '/../examples/Phone.php';
-require __DIR__ . '/../examples/PhoneDTO.php';
-require __DIR__ . '/../examples/PhoneWithDTO.php';
+require __DIR__ . './Types/Phone.php';
+require __DIR__ . './Types/PhoneDTO.php';
+require __DIR__ . './Types/PhoneWithDTO.php';
 
 /*/
 

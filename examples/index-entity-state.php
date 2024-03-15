@@ -6,7 +6,7 @@ namespace DomainLib\Examples;
 
 use DomainLib\Results\OperationResult;
 
-/* delete or append the second-to-last space * /
+/* delete or append the second-to-last space */
 
 // Without Composer autoloader.
 require __DIR__ . '/../src/Results/OperationResult.php';
@@ -18,15 +18,15 @@ require __DIR__ . '/../src/DataUnits/ValidRecord.php';
 require __DIR__ . '/../src/DataUnits/ValueObject.php';
 require __DIR__ . '/../src/DataUnits/EntityState.php';
 
-require __DIR__ . '/../examples/Password.php';
-require __DIR__ . '/../examples/PasswordDTO.php';
-require __DIR__ . '/../examples/FullName.php';
-require __DIR__ . '/../examples/FullNameDTO.php';
-require __DIR__ . '/../examples/Phone.php';
-require __DIR__ . '/../examples/PhoneDTO.php';
-require __DIR__ . '/../examples/PhoneWithDTO.php';
-require __DIR__ . '/../examples/UserState.php';
-require __DIR__ . '/../examples/UserStateDTO.php';
+require __DIR__ . './Types/Password.php';
+require __DIR__ . './Types/PasswordDTO.php';
+require __DIR__ . './Types/FullName.php';
+require __DIR__ . './Types/FullNameDTO.php';
+require __DIR__ . './Types/Phone.php';
+require __DIR__ . './Types/PhoneDTO.php';
+require __DIR__ . './Types/PhoneWithDTO.php';
+require __DIR__ . './Types/UserState.php';
+require __DIR__ . './Types/UserStateDTO.php';
 
 /*/
 
