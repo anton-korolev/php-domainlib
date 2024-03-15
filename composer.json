@@ -1,0 +1,26 @@
+{
+    "name": "domainlib/domainlib",
+    "description": "PHP library for designing entities and aggregates",
+    "keywords": [
+        "entity",
+        "aggregate"
+    ],
+    "type": "library",
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Anton Korolev",
+            "email": "antonkorolev.dev@gmail.com",
+            "role": "Author and maintainer"
+        }
+	],
+    "require": {
+        "php": ">=8.1.0"
+	},
+    "autoload": {
+        "psr-4": {"DomainLib\\": "src"}
+    },
+	"autoload-dev": {
+        "psr-4": {"DomainLib\\Examples\\": "examples\\Types"}
+	}
+}
