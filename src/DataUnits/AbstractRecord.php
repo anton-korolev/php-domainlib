@@ -103,14 +103,34 @@ abstract class AbstractRecord
     }
 
     /**
+     * Returns the extracted list of record attribute names.
+     *
+     * Extracts attribute names from `attributeSpecifications()`.
+     *
+     * @return array<int,string> a list of record attribute names.
+     */
+    protected static function extractAttributeList(): array
+    {
+        $result = [];
+        foreach (static::attributeSpecifications() as $key => $value) {
+            if (is_string($key)) {
+                $result[] = $key;
+            } else {
+                $result[] = $value;
+            }
+        }
+        return $result;
+    }
+
+    /**
      * Returns a full list of record attribute names.
      *
      * Note, it is recommended to use `attributeList()` to retrieve verified attribute names.
      *
-     * By default, unless you override this function in a child class, all attributes listed in
-     * `attributeSpecifications()` are returned.
+     * By default, unless you override this function in a child class, all attributes fetched with
+     * `fetchAttributeList()` are returned.
      *
-     * When you override this function, the return value must be an associative array of strings:
+     * When you override this function, the return value must be an array of strings:
      *
      * ```php
      *     ['attribute1', 'attribute2', ...]
@@ -134,14 +154,7 @@ abstract class AbstractRecord
         static $attributes = [];
 
         if (!isset($attributes[static::class])) {
-            $attributes[static::class] = [];
-            foreach (static::attributeSpecifications() as $key => $value) {
-                if (is_string($key)) {
-                    $attributes[static::class][] = $key;
-                } else {
-                    $attributes[static::class][] = $value;
-                }
-            }
+            $attributes[static::class] = static::extractAttributeList();
         }
 
         return $attributes[static::class];
@@ -168,6 +181,7 @@ abstract class AbstractRecord
 
         if (!isset($attributeList[static::class])) {
             $attributeList[static::class] = static::attributes();
+            // Attribute names validation.
             foreach ($attributeList[static::class] as $attribute) {
                 if (!is_string($attribute)) {
                     throw new RuntimeException(
