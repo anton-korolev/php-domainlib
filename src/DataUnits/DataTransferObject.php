@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DomainLib\DataUnits;
 
 use ReflectionMethod;
+use ReflectionParameter;
 use RuntimeException;
 
 /**
@@ -68,7 +69,6 @@ abstract class DataTransferObject extends AbstractRecord
     public static function DTOtoArray(array|DataTransferObject $dto): array
     {
         if ($dto instanceof DataTransferObject) {
-            /** @var DataTransferObject $dto */
             return $dto->internalGetAttributes(null);
         }
         return $dto;
@@ -102,6 +102,31 @@ abstract class DataTransferObject extends AbstractRecord
     }
 
     /**
+     * Returns a list of constructor parameters.
+     *
+     * @return ReflectionParameter[] a list of constructor parameters.
+     */
+    protected static function constructorParameters(): array
+    {
+        /**
+         * A shared cache of constructor parameters of all child classes (for php 8.1 and later),
+         * indexed by child class name: (ChildClassName => [constructorParameters]).
+         *
+         * @var array<string,ReflectionParameter[]>
+         */
+        static $constructorParameters = [];
+
+        if (!isset($constructorParameters[static::class])) {
+            // Constructor parameters extraction.
+            $constructor = new ReflectionMethod(static::class, '__construct');
+            $constructorParameters[static::class] =
+                $constructor->getParameters();
+        }
+
+        return $constructorParameters[static::class];
+    }
+
+    /**
      * {@inheritdoc}
      *
      * If the attribute specifications are empty, extracts the property names from the `__construct()`
@@ -119,9 +144,7 @@ abstract class DataTransferObject extends AbstractRecord
         }
 
         $result = [];
-        $constructor = new ReflectionMethod(static::class, '__construct');
-        $parameters = $constructor->getParameters();
-        foreach ($parameters as $parameter) {
+        foreach (static::constructorParameters() as $parameter) {
             if (
                 !$parameter->isVariadic()
                 && property_exists(static::class, $parameter->name)
@@ -136,6 +159,33 @@ abstract class DataTransferObject extends AbstractRecord
             );
         }
 
+        return $result;
+    }
+
+    /**
+     * Returns the extracted list of the Data Transfer Object attribute classes.
+     *
+     * Extracts attribute classes from `attributeSpecifications()` or from constructor parameters
+     * if the attribute specifications are empty.
+     *
+     * @return array<string,class-string<self>> list of DTO attribute class names
+     * (attribute => dtoClassName).
+     */
+    protected static function extractDtoClasses(): array
+    {
+        $result =
+            static::extractAttributeSpecificationValues('dtoClass', true);
+        if (!empty($result)) {
+            return $result;
+        }
+
+        $result = [];
+        foreach (static::constructorParameters() as $parameter) {
+            $type = $parameter->getType()?->getName();
+            if (is_subclass_of($type, self::class)) {
+                $result[$parameter->name] = $type;
+            }
+        }
         return $result;
     }
 
@@ -165,7 +215,7 @@ abstract class DataTransferObject extends AbstractRecord
      * to merge the parent DTO class names with child DTO class names using functions such as
      * `array_merge()`.
      *
-     * @return array<string,string> list of DTO attribute class names
+     * @return array<string,class-string<self>> list of DTO attribute class names
      * (attribute => dtoClassName).
      *
      * @see attributeSpecifications()
@@ -183,8 +233,7 @@ abstract class DataTransferObject extends AbstractRecord
 
         if (!isset($dtoClasses[static::class])) {
             // Attribute DTO classes extraction.
-            $dtoClasses[static::class] =
-                static::extractAttributeSpecificationValues('dtoClass', true);
+            $dtoClasses[static::class] = static::extractDtoClasses();
         }
 
         return $dtoClasses[static::class];
@@ -196,7 +245,7 @@ abstract class DataTransferObject extends AbstractRecord
      * Validates all DTO class names specified in `dtoClasses()`. They must extend the
      * `DataTransferObject` class.
      *
-     * @return array<string,DataTransferObject> list of verified DTO attribute class names
+     * @return array<string,class-string<self>> list of verified DTO attribute class names
      * (attribute => dtoClassName).
      *
      * @throws RuntimeException if an invalid `dtoClass` specification is defined for the attribute.
@@ -209,7 +258,7 @@ abstract class DataTransferObject extends AbstractRecord
          * A shared cache of verified DTO class names for the attributes of all child classes (for php 8.1
          * and later), indexed by child class name (ChildClassName => [attributeName => dtoClass]).
          *
-         * @var array<string,array<string,DataTransferObject>>
+         * @var array<string,array<string,class-string<self>>>
          */
         static $attributeDtoClasses = [];
 
