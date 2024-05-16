@@ -17,7 +17,11 @@ use RuntimeException;
  * - Convert a DTO (including nested DTOs) to an associative array (see `DTOtoArray()`).
  *
  * Supports the following attribute specifications:
- * - `dtoClass` - name of the attribute's DTO class.
+ * - `dtoClass` - the class name of the nested DTO attribute.
+ *
+ * By default, the list of attributes and the list of class names of nested DTOs are extracted from the
+ * constructor parameters. This behavior can be changed by overriding the `attributeSpecifications()`,
+ * `attributes()` and `dtoClasses()` methods.
  *
  * Typical example of a DTO class (php 8.1):
  * ```php
@@ -129,7 +133,7 @@ abstract class DataTransferObject extends AbstractRecord
     /**
      * {@inheritdoc}
      *
-     * If the attribute specifications are empty, extracts the property names from the `__construct()`
+     * If the attribute specifications are empty, extracts the property names from the constructor
      * parameters.
      *
      * @return array<int,string> a list of record attribute names.

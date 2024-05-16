@@ -32,7 +32,7 @@ The project is at an early stage of development. The current version is 0.1.28.
 composer require domainlib/domainlib --dev
 ```
 
-## Usage 
+## Usage
 
 [Check the examples](./examples/) to learn about usage.
 
@@ -66,11 +66,14 @@ Implements the following commonly used features:
 
 - Create a DTO from an associative array with attribute type control and automatic creation of all internal DTOs (see `createFromArray()`).
 - Convert a DTO (including nested DTOs) to an associative array (see `DTOtoArray()`).
- 
+
  Supports the following attribute specifications:
- 
- - `dtoClass` - name of the attribute's DTO class.
- 
+
+ - `dtoClass` - the class name of the nested DTO attribute.
+
+By default, the list of attributes and the list of class names of nested DTOs are extracted from the constructor parameters. This behavior can be changed by overriding the `attributeSpecifications()`, `attributes()` and `dtoClasses()` methods.
+
+
 Typical example of a DTO class (php 8.1):
 
 ```php
@@ -99,7 +102,7 @@ class UserDTO extends DataTransferObject
 
 Partial Data Transfer Object.
 
-```php 
+```php
 abstract class PartialDTO extends DataTransferObject { }
 ```
 

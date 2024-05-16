@@ -127,8 +127,9 @@ abstract class AbstractRecord
      *
      * Note, it is recommended to use `attributeList()` to retrieve verified attribute names.
      *
-     * By default, unless you override this function in a child class, all attributes fetched with
-     * `fetchAttributeList()` are returned.
+     * By default, unless you override this method in a child class, all attributes listed in
+     * `attributeSpecifications()` are extracted using `extractAttributeList()`. This behavior
+     * can be changed in child classes by overriding the `extractAttributeList()` method.
      *
      * When you override this function, the return value must be an array of strings:
      *
@@ -141,6 +142,7 @@ abstract class AbstractRecord
      * @return array<int,string> a list of record attribute names.
      *
      * @see attributeSpecifications()
+     * @see extractAttributeList()
      * @see attributeList()
      */
     protected static function attributes(): array
