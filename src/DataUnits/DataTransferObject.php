@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DomainLib\DataUnits;
 
+use ReflectionMethod;
 use RuntimeException;
 
 /**
@@ -53,7 +54,7 @@ abstract class DataTransferObject extends AbstractRecord
      * @see DataTransferObject for a typical example of constructor usage.
      * @see createFromArray()
      */
-    protected function __construct()
+    public function __construct(mixed ...$values)
     {
     }
 
@@ -98,6 +99,44 @@ abstract class DataTransferObject extends AbstractRecord
         $values = array_intersect_key($values, array_flip(static::attributeList()));
         static::prepareValues($values);
         return new static(...$values);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * If the attribute specifications are empty, extracts the property names from the `__construct()`
+     * parameters.
+     *
+     * @return array<int,string> a list of record attribute names.
+     *
+     * @throws RuntimeException if the constructor parameters are invalid.
+     */
+    protected static function extractAttributeList(): array
+    {
+        $result = parent::extractAttributeList();
+        if (!empty($result)) {
+            return $result;
+        }
+
+        $result = [];
+        $constructor = new ReflectionMethod(static::class, '__construct');
+        $parameters = $constructor->getParameters();
+        foreach ($parameters as $parameter) {
+            if (
+                !$parameter->isVariadic()
+                && property_exists(static::class, $parameter->name)
+            ) {
+                $result[] = $parameter->name;
+            }
+        }
+
+        if (empty($result)) {
+            throw new RuntimeException(
+                'Invalid parameters in \'' . static::class . '::__construct()\'.'
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -175,8 +214,8 @@ abstract class DataTransferObject extends AbstractRecord
         static $attributeDtoClasses = [];
 
         if (!isset($attributeDtoClasses[static::class])) {
-            // Attribute DTO classes validation.
             $attributeDtoClasses[static::class] = static::dtoClasses();
+            // Attribute DTO classes validation.
             foreach ($attributeDtoClasses[static::class] as $attribute => $dtoClass) {
                 if (!is_subclass_of($dtoClass, self::class)) {
                     throw new RuntimeException(
