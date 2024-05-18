@@ -2,7 +2,7 @@
 
 PHP library for designing entities and aggregates.
 
-The project is at an early stage of development. The current version is 0.1.28.
+The project is at an early stage of development. The current version is 0.1.29.
 
 ## Features
 
