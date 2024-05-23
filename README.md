@@ -244,6 +244,7 @@ Additional implements the following features:
 
 Supports the following additional attribute specifications:
 
+- `options` - bitmask of attribute properties that are defined by `ATTRIBUTE_OPTION_*` constants (see `attributeOptions()`).
 - `default` - default value for an entity attribute. Can be a simple value, callable or the name of a static method of the current class, in the latter cases it will be computed at runtime (see `attributeDefaults()`).
 - `getter` - getter for an entity attribute (see `attributeGetters()`). Applies only to the massive way of getting attribute values using `internalGetAttributes()`.
 - `setter` - setter for an entity attribute (see `attributeSetters()`). Applies only to the massive way of setting attribute values using `internalSetAttributes()`.

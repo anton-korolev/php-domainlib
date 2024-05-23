@@ -157,6 +157,92 @@ abstract class EntityState extends ValidRecord
     }
 
     /**
+     * Returns a list of record attribute options.
+     *
+     * `Options` is a bitmask of attribute properties that are defined by `ATTRIBUTE_OPTION_*` constants.
+     *
+     * Note, it is recommended to use `attributeOptions()` to retrieve verified attribute options.
+     *
+     * By default, unless you override this function in a child class, all `options` specification values
+     * will be retrieved from `attributeSpecifications()` and returned.
+     *
+     * When you override this function, the return value must be an associative array of integer:
+     * ```php
+     * [
+     *     'attribute1' => options1,
+     *     'attribute2' => options2,
+     *     ...
+     * ]
+     * ```
+     *
+     * Note, in order to inherit attribute options defined in the parent class, a child class needs to
+     * merge the parent attribute options with child attribute options using functions such as `array_merge()`.
+     *
+     * @return array<string,int> a list of attribute options (attribute => options).
+     *
+     * @see attributeSpecifications()
+     * @see attributeOptions()
+     */
+    protected static function options(): array
+    {
+        /**
+         * A shared cache of attribute options of all child classes (for php 8.1 and later),
+         * indexed by child class name (childClassName => [attribute => options]).
+         *
+         * @var array<string,array<string,int>>
+         */
+        static $options = [];
+
+        if (!isset($options[static::class])) {
+            // Attribute options extraction.
+            $options[static::class] =
+                static::extractAttributeSpecificationValues('options', true);
+        }
+
+        return $options[static::class];
+    }
+
+    /**
+     * Returns a list of verified record attribute options.
+     *
+     * Validates all options specified in `options()`. They must be an `Integer`.
+     *
+     * @return array<string,int> a list of verified attribute options (attribute => options).
+     *
+     * @throws RuntimeException if an invalid options is defined for the attribute.
+     *
+     * @see options()
+     */
+    final public static function attributeOptions(): array
+    {
+        /**
+         * A shared cache of verified attribute options of all child classes (for php 8.1 and later),
+         * indexed by child class name (ChildClassName => [attribute => options]).
+         *
+         * @var array<string,array<string,int>>
+         */
+        static $attributeOptions = [];
+
+        if (!isset($attributeOptions[static::class])) {
+            $attributeOptions[static::class] = array_merge(
+                array_fill_keys(static::attributeList(), 0),
+                static::options()
+            );
+            // Attribute options validation.
+            foreach ($attributeOptions[static::class] as $attribute => $option) {
+                if (!is_int($option)) {
+                    throw new \RuntimeException(
+                        'Invalid options at \'' . static::class . "::$attribute' attribute."
+                            . ' The attribute options must be an Integer.'
+                    );
+                }
+            }
+        }
+
+        return $attributeOptions[static::class];
+    }
+
+    /**
      * Returns default values for entity attributes.
      *
      * Note, it is recommended to use `attributeDefaults()` to retrieve correctly computing default
