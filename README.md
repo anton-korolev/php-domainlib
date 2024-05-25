@@ -253,6 +253,7 @@ Supports the following additional attribute specifications:
 Supports the following attribute options (see options()):
 
 - ATTRIBUTE_OPTION_READONLY - read-only attribute flag.
+- ATTRIBUTE_OPTION_PRIMARYKEY - primary key attribute flag.
 
 Typical excample usage EntityState class (php 8.1):
 
@@ -286,6 +287,7 @@ class UserState extends EntityState
     {
         return [
             'id' => [
+                'options' => static::ATTRIBUTE_OPTION_PK_MASK,
                 'validators' => ['isString', 'trim', 'notEmpty', 'validateId' => static::validateId(...)],
             ],
 
@@ -318,6 +320,7 @@ class UserState extends EntityState
             ],
 
             'createdAt' => [
+                'options' => static::ATTRIBUTE_OPTION_READONLY,
                 'default' => fn (): int => time(),
                 // 'default' => fn (): DateTimeImmutable => new DateTimeImmutable(),
                 'validators' => ['dateTimeImmutable'],

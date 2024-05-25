@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DomainLib\DataUnits;
 
 use DomainLib\Results\OperationResult;
+use RuntimeException;
 
 /**
  * Base class for entity states.
@@ -27,6 +28,7 @@ use DomainLib\Results\OperationResult;
  *
  * Supports the following attribute options (see options()):
  * - ATTRIBUTE_OPTION_READONLY - read-only attribute flag.
+ * - ATTRIBUTE_OPTION_PRIMARYKEY - primary key attribute flag.
  *
  * Typical excample usage EntityState class (php 8.1):
  * ```php
@@ -151,6 +153,28 @@ abstract class EntityState extends ValidRecord
     final protected const ATTRIBUTE_OPTION_READONLY = 1 << 0;
 
     /**
+     * Primary key attribute flag (see `options()`).
+     *
+     * The primary key uniquely identifies an entity. It can consist of one or more attributes.
+     *
+     * Note, it is recommended to use `ATTRIBUTE_OPTION_PK_MASK` to define primary key attributes.
+     *
+     * @var int
+     * @see primaryKeyAttributes()
+     */
+    final protected const ATTRIBUTE_OPTION_PRIMARYKEY = 1 << 1;
+
+    /**
+     * Primary key attribute mask.
+     *
+     * By default, the primary key attributes are read-only (see `ATTRIBUTE_OPTION_READONLY`).
+     *
+     * @var int
+     */
+    protected const ATTRIBUTE_OPTION_PK_MASK = self::ATTRIBUTE_OPTION_PRIMARYKEY
+        | self::ATTRIBUTE_OPTION_READONLY;
+
+    /**
      * Internal factory method to create an instance of `EntityState` from an associative array
      * (attribute => value).
      *
@@ -170,7 +194,7 @@ abstract class EntityState extends ValidRecord
     }
 
     /**
-     * Returns a list of record attribute options.
+     * Returns a list of entity attribute options.
      *
      * `Options` is a bitmask of attribute properties that are defined by `ATTRIBUTE_OPTION_*` constants.
      *
@@ -216,9 +240,9 @@ abstract class EntityState extends ValidRecord
     }
 
     /**
-     * Returns a list of verified record attribute options.
+     * Returns a list of verified entity attribute options.
      *
-     * Validates all options specified in `options()`. They must be an `Integer`.
+     * Verifies all options specified in `options()`. They must be an `Integer`.
      *
      * @return array<string,int> a list of verified attribute options (attribute => options).
      *
@@ -253,6 +277,94 @@ abstract class EntityState extends ValidRecord
         }
 
         return $attributeOptions[static::class];
+    }
+
+    /**
+     * Returns a list of entity primary key attribute names.
+     *
+     * The primary key uniquely identifies an entity. It can consist of one or more attributes.
+     *
+     * Note, it is recommended to use `primaryKeyAttributes()` to retrieve a verified list of primary
+     * key attribute names.
+     *
+     * By default, unless you override this function in a child class, all attribute names that have
+     * the `ATTRIBUTE_OPTION_PRIMARYKEY` flag will be retrieved from `attributeOptions()` and returned.
+     *
+     * When you override this function, the return value must be an array of string:
+     * ```php
+     * ['attribute1', 'attribute2', ...]
+     * ```
+     *
+     * Note, in order to inherit a primary key defined in the parent class, a child class needs to merge
+     * the parent primary key with child primary key using functions such as `array_merge()`.
+     *
+     * @return array<int,string> a list of entity primary key attribute names.
+     *
+     * @see attributeOptions()
+     * @see ATTRIBUTE_OPTION_PRIMARYKEY
+     */
+    protected static function primaryKey(): array
+    {
+        /**
+         * A shared cache of the list of primary key attribute names of all child classes (for php 8.1
+         * and later), indexed by child class name (childClassName => primaryKeyList).
+         *
+         * @var array<string,array<int,string>>
+         */
+        static $primaryKey = [];
+
+        if (!isset($primaryKey[static::class])) {
+            // Primary key attribute names extraction.
+            $primaryKey[static::class] = array_keys(
+                array_filter(
+                    static::attributeOptions(),
+                    function (int $options): bool {
+                        return ($options & static::ATTRIBUTE_OPTION_PRIMARYKEY) > 0;
+                    }
+                )
+            );
+        }
+
+        return $primaryKey[static::class];
+    }
+
+    /**
+     * Returns a verified list of entity primary key attribute names.
+     *
+     * The primary key uniquely identifies an entity. It can consist of one or more attributes.
+     *
+     * Verifies all primary key attribute names specified in `primaryKey()`. They must be listed in
+     * `attributeList()`.
+     *
+     * @return array<int,string> a verified list of entity primary key attribute names.
+     *
+     * @see primaryKey()
+     */
+    final public static function primaryKeyAttributes(): array
+    {
+        /**
+         * A shared cache of the verified list of primary key attribute names of all child classes
+         * (for php 8.1 and later), indexed by child class name (childClassName => primaryKeyList).
+         *
+         * @var array<string,array<int,string>>
+         */
+        static $primaryKeyAttributes = [];
+
+        if (!isset($primaryKeyAttributes[static::class])) {
+            // Primary key attribute names extraction.
+            $primaryKeyAttributes[static::class] = array_values(static::primaryKey());
+            // Primary key attribute names validation.
+            $attributeList = static::attributeList();
+            foreach ($primaryKeyAttributes[static::class] as $attribute) {
+                if (!in_array($attribute, $attributeList)) {
+                    throw new \RuntimeException(
+                        "Unknown attribute '$attribute' in '" . static::class . '::primaryKey()\'.'
+                    );
+                }
+            }
+        }
+
+        return $primaryKeyAttributes[static::class];
     }
 
     /**
