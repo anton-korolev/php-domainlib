@@ -250,6 +250,10 @@ Supports the following additional attribute specifications:
 - `setter` - setter for an entity attribute (see `attributeSetters()`). Applies only to the massive way of setting attribute values using `internalSetAttributes()`.
 - `generator` - generator for an entity attribute (see `attributeGenerators()`). Applies only to the massive way of setting attribute values using `internalSetAttributes()`. Unlike a setter, the generator will be called anyway, even if no new attribute value is passed in.
 
+Supports the following attribute options (see options()):
+
+- ATTRIBUTE_OPTION_READONLY - read-only attribute flag.
+
 Typical excample usage EntityState class (php 8.1):
 
 ```php

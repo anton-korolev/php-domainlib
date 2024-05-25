@@ -25,6 +25,9 @@ use DomainLib\Results\OperationResult;
  * massive way of setting attribute values using `internalSetAttributes()`. Unlike a setter, the
  * generator will be called anyway, even if no new attribute value is passed in.
  *
+ * Supports the following attribute options (see options()):
+ * - ATTRIBUTE_OPTION_READONLY - read-only attribute flag.
+ *
  * Typical excample usage EntityState class (php 8.1):
  * ```php
  * class UserState extends EntityState
@@ -137,6 +140,16 @@ use DomainLib\Results\OperationResult;
  */
 abstract class EntityState extends ValidRecord
 {
+    /**
+     * Read-only attribute flag (see `options()`).
+     *
+     * Read-only attributes can only be set once (as long as their value is `null`).
+     *
+     * @var int
+     * @see excludeReadonlyAttributes()
+     */
+    final protected const ATTRIBUTE_OPTION_READONLY = 1 << 0;
+
     /**
      * Internal factory method to create an instance of `EntityState` from an associative array
      * (attribute => value).
@@ -660,6 +673,21 @@ abstract class EntityState extends ValidRecord
     }
 
     /**
+     * Checks whether the attribute is read-only.
+     *
+     * @param string $attribute attribute name.
+     *
+     * @return bool `true` if the attribute is read-only, `false` otherwise.
+     *
+     * @see ATTRIBUTE_OPTION_READONLY
+     */
+    protected static function isReadOnlyAttribute(string $attribute): bool
+    {
+        $options = static::attributeOptions()[$attribute] ?? 0;
+        return ($options & static::ATTRIBUTE_OPTION_READONLY) > 0;
+    }
+
+    /**
      * {@inheritdoc}
      *
      * If a getter is defined for an attribute, the attribute value will be retrieved using that getter
@@ -698,19 +726,53 @@ abstract class EntityState extends ValidRecord
     }
 
     /**
+     * Excludes read-only attributes.
+     *
+     * Read-only attributes can only be set once (as long as their value is `null`).
+     *
+     * @param array<string,mixed> associative array of new attribute values (attribute => newValue)
+     * to be processed.
+     * @param string $warning warning message. If an empty string, no warning is generated.
+     *
+     * @return void
+     *
+     * @see isReadOnlyAttribute()
+     *
+     */
+    protected function excludeReadonlyAttributes(array &$newValues, string $warning = ''): void
+    {
+        foreach ($newValues as $attribute => $newValue) {
+            if (static::isReadOnlyAttribute($attribute) && isset($this->$attribute)) {
+                unset($newValues[$attribute]);
+                if (!empty($warning)) {
+                    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+                    trigger_error(
+                        $warning . ' \'' . static::class . "::$attribute'"
+                            . " in {$trace[3]['file']}:{$trace[3]['line']}.",
+                        E_USER_WARNING
+                    );
+                }
+            }
+        }
+    }
+
+    /**
      * {@inheritdoc}
      *
+     * - Excludes read-only attributes (see `excludeReadonlyAttributes()`).
      * - Generates attribute values that have generators specified (see `attributeGenerators()`).
      * - {@inheritdoc}
-     *
      */
     protected function prepareAttributeValues(array &$newValues, OperationResult $result): bool
     {
+        $this->excludeReadonlyAttributes(
+            $newValues,
+            'Can not modify read-only attribute'
+        );
+
         $attributeGenerators = static::attributeGenerators();
         foreach ($attributeGenerators as $attribute => $generator) {
-            // if (!isset($newValues[$attribute])) { ?????????????
             $newValues[$attribute] = $generator($newValues[$attribute] ?? null);
-            // }
         }
 
         return parent::prepareAttributeValues($newValues, $result);
