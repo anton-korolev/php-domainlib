@@ -2,7 +2,7 @@
 
 PHP library for designing entities and aggregates.
 
-The project is at an early stage of development. The current version is 0.1.29.
+The project is at an early stage of development. The current version is 0.1.30.
 
 ## Features
 
@@ -10,6 +10,7 @@ The project is at an early stage of development. The current version is 0.1.29.
 - Automatically convert an object (including all nested objects) to a DTO or array and back again.
 - Validate attributes (properties) when creating or modifying an object (including all nested objects).
 - Simple description of the object's attribute specifications. Supports the following specifications:
+  - `options` - bitmask of attribute properties.
   - `validators` - list of attribute validators.
   - `default` - default value for an object attribute.
   - `generator` - generator for an object attribute.
